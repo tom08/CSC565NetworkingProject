@@ -45,15 +45,16 @@ class ListenerThread(threading.Thread):
 
 class FileClient:
 
-    def __init__(self, host):
+    def __init__(self, host, local_addr):
         self.host = host
+        self.local_addr = local_addr
         self.port = 12001
         self.socket = socket.socket()
 
     def start(self):
         self.socket.connect((self.host, self.port))
         print("Client main program started!")
-        listener = ListenerThread("127.0.0.1")
+        listener = ListenerThread(self.local_addr)
         listener.start()
         print("Type 'exit' to quit else 'send filename hostname':")
         while True:
@@ -72,8 +73,9 @@ class FileClient:
         listener.exit()
 
 def main():
-    host = "127.0.0.1"
-    client = FileClient(host)
+    host = "192.168.1.8"
+    local_addr = input("Enter your ip address:")
+    client = FileClient(host, local_addr)
     client.start()
 
 if __name__ == "__main__":

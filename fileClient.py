@@ -1,6 +1,7 @@
 """
 Initial contact: TO::hostname::FILE::filename
 """
+import sys, select
 import socket
 import threading
 from settings import SERVER_ADDR
@@ -14,6 +15,7 @@ class ListenerThread(threading.Thread):
         self.host = host
         self.port = 12002
         self.ok_to_run = True
+        self.approve = False
         self.daemon = True
 
     def exit(self):
@@ -24,13 +26,26 @@ class ListenerThread(threading.Thread):
         self.socket.listen(1)
 
     def handle(self, client_sock):
-        while self.ok_to_run:
-            data = client_sock.recv(1024).decode()
-            if not data:
-                break
-            print(str(data))
-            to_send = "Recieved: " + str(data)
-            client_sock.send(to_send.encode())
+        data = client_sock.recv(1024).decode()
+        if not data:
+            return
+        print(str(data))
+        args = data.split("::")
+#REQUEST format == REQUEST::HOST::<host>::FILE::<filename>
+        if(len(args) >= 5 and args[0] == "REQUEST"):
+            ask_approve = input("Host: "+args[2]+" wants to send the file: "+args[4]+".  Do you accept? [y/N]:")
+            if ask_approve not in ('y', 'Y', 'yes', 'Yes', 'YES'):
+                ack = "REJECTED::FILE::"+args[4]
+                client_sock.send(ack.encode())
+                return
+            ack = "ACCEPTED::FILE::"+args[4]
+            client_sock.send(ack.encode())
+            file_sock = socket.socket()
+            file_sock.connect((args[2], self.port))
+            file_request = "OKFILE::FILE::"+args[4]
+            file_sock.send(file_request.encode())
+            ack = file_sock.recv(1024).decode()
+            print(ack)
 
     def run(self):
         self.listen()
@@ -50,19 +65,23 @@ class FileClient:
         self.host = host
         self.local_addr = local_addr
         self.port = 12001
-        self.socket = socket.socket()
+        self.socket = None
 
     def start(self):
         listener = ListenerThread(self.local_addr)
         listener.start()
+        print("Client main program started!")
         print("Type 'exit' to quit else 'send filename hostname':")
         while True:
+            self.socket = socket.socket()
             self.socket.connect((self.host, self.port))
-            print("Client main program started!")
-            msg = input("> ")
-            if msg == "exit":
+            msg = None
+            timeout = 2
+            while(not msg):
+                msg, o, e = select.select([sys.stdin], [], [], timeout)
+            args = sys.stdin.readline().strip().split()
+            if args[0] == "exit":
                 break
-            args = msg.split()
             if args[0] != 'send' or not len(args) >= 3:
                 print("That was not a valid command!")
                 continue

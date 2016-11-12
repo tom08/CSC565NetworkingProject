@@ -8,14 +8,18 @@ import threading
 
 class HandleRequest(threading.Thread):
 
-    def __init__(self, socket, addr):
+    def __init__(self, sock, addr):
         threading.Thread.__init__(self)
-        self.init_socket = socket
+        self.init_socket = sock
         self.init_host = addr[0]
         self.init_port = addr[1]
         self.to_host = None
         self.to_port = 12002
         self.filename = None
+        self.to_socket = socket.socket()
+
+    def handle_no_response(self):
+        pass
 
     def run(self):
         data = self.init_socket.recv(1024).decode()
@@ -25,12 +29,17 @@ class HandleRequest(threading.Thread):
         if len(args) >= 4 and args[2] == "FILE":
             self.filename = args[3]
         if self.to_host and self.filename:
-            to_send = "RECIEVED::HOST:"+self.to_host+", SEND:"+self.filename
+            send_ack = "RECIEVED::HOST:"+self.to_host+", SEND:"+self.filename
+            to_send = "REQUEST::HOST::"+self.init_host+"::FILE::"+self.filename
+            self.init_socket.send(send_ack.encode())
+            self.to_socket.connect((self.to_host, self.to_port))
+            self.to_socket.send(to_send.encode());
+            rcv_ack = self.to_socket.recv(1024).decode()
+            print("CONTACTDED CLIENT:"+rcv_ack)
         else:
-            to_send = "ERROR::No data or improperly formatted data recieved"
-        self.init_socket.send(to_send.encode())
-        #TODO: initiate contact with specified host.
-
+            send_ack = "ERROR::No data or improperly formatted data recieved"
+            self.init_socket.send(send_ack.encode())
+        return
 
 class FileServer:
 
@@ -55,7 +64,8 @@ class FileServer:
             self.handle(client, client_addr)
 
 def main():
-    server = FileServer("127.0.0.1")
+    addr = input("Enter your IP Address:")
+    server = FileServer(addr)
     server.main_loop()
 
 if __name__ == "__main__":

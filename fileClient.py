@@ -52,12 +52,12 @@ class FileClient:
         self.socket = socket.socket()
 
     def start(self):
-        self.socket.connect((self.host, self.port))
-        print("Client main program started!")
         listener = ListenerThread(self.local_addr)
         listener.start()
         print("Type 'exit' to quit else 'send filename hostname':")
         while True:
+            self.socket.connect((self.host, self.port))
+            print("Client main program started!")
             msg = input("> ")
             if msg == "exit":
                 break
@@ -69,7 +69,7 @@ class FileClient:
             self.socket.send(msg.encode())
             rcvd = self.socket.recv(1024).decode()
             print("> "+str(rcvd))
-        self.socket.close()
+            self.socket.close()
         listener.exit()
 
 def main():

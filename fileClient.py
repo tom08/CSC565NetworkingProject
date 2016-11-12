@@ -1,7 +1,7 @@
 """
 Initial contact: TO::hostname::FILE::filename
 """
-import sys, select
+import os.path, sys, select
 import socket
 import threading
 from settings import SERVER_ADDR
@@ -46,6 +46,9 @@ class ListenerThread(threading.Thread):
             file_sock.send(file_request.encode())
             ack = file_sock.recv(1024).decode()
             print(ack)
+        elif(len(args) >= 3 and args[0] == "OKFILE"):
+            ack = "SENDING::FILE::"+args[2]
+            client_sock.send(ack.encode())
 
     def run(self):
         self.listen()
@@ -84,6 +87,9 @@ class FileClient:
                 break
             if args[0] != 'send' or not len(args) >= 3:
                 print("That was not a valid command!")
+                continue
+            if(not os.path.isfile(args[1])):
+                print("The file '"+args[1]+"' does not exist!")
                 continue
             msg = "TO::"+args[2]+"::FILE::"+args[1]
             self.socket.send(msg.encode())

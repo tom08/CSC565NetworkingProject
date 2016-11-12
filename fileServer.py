@@ -4,6 +4,7 @@ Initial contact: TO::hostname::FILE::filename
 
 import socket
 import threading
+from settings import SERVER_ADDR
 
 
 class HandleRequest(threading.Thread):
@@ -64,7 +65,7 @@ class FileServer:
             self.handle(client, client_addr)
 
 def main():
-    addr = input("Enter your IP Address:")
+    addr = SERVER_ADDR
     server = FileServer(addr)
     server.main_loop()
 

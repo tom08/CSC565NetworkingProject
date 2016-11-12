@@ -3,6 +3,7 @@ Initial contact: TO::hostname::FILE::filename
 """
 import socket
 import threading
+from settings import SERVER_ADDR
 
 
 class ListenerThread(threading.Thread):
@@ -73,7 +74,7 @@ class FileClient:
         listener.exit()
 
 def main():
-    host = "192.168.1.8"
+    host = SERVER_ADDR
     local_addr = input("Enter your ip address:")
     client = FileClient(host, local_addr)
     client.start()

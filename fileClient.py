@@ -25,6 +25,29 @@ class ListenerThread(threading.Thread):
         self.socket.bind((self.host, self.port))
         self.socket.listen(1)
 
+    def send_file(self, client_sock, fname):
+        print("Sending File")
+        f = open(fname, 'rb')
+        send_line = f.read(1024)
+        while send_line:
+            client_sock.send(send_line)
+            send_line = f.read(1024)
+        f.close()
+        print("File Sent")
+        client_sock.shutdown(socket.SHUT_WR)
+        client_sock.close()
+
+    def recv_file(self, file_sock, fname):
+        print("Receiving File...")
+        f = open(fname, 'wb')
+        write_line = file_sock.recv(1024)
+        while write_line:
+            f.write(write_line)
+            write_line = file_sock.recv(1024)
+        f.close()
+        print("File Recieved")
+        file_sock.close()
+
     def handle(self, client_sock):
         data = client_sock.recv(1024).decode()
         if not data:
@@ -46,9 +69,11 @@ class ListenerThread(threading.Thread):
             file_sock.send(file_request.encode())
             ack = file_sock.recv(1024).decode()
             print(ack)
+            self.recv_file(file_sock, args[4])
         elif(len(args) >= 3 and args[0] == "OKFILE"):
             ack = "SENDING::FILE::"+args[2]
             client_sock.send(ack.encode())
+            self.send_file(client_sock, args[2])
 
     def run(self):
         self.listen()

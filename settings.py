@@ -10,6 +10,9 @@ SERVER_TEMP_INFO_FILE = "temp_info.txt"
 # Folder to hold temp files on server
 SERVER_TEMP_FILES = "./temp_files"
 
+# Directory on client where downloaded files will be placed
+CLIENT_DOWNLOAD_DIR = "./downloads"
+
 # Override settings with settings_local.py
 try:
     from settings_local import *

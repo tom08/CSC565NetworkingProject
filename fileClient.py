@@ -4,7 +4,7 @@ Initial contact: TO::hostname::FILE::filename
 import os.path, sys, select
 import socket
 import threading
-from settings import SERVER_ADDR
+from settings import SERVER_ADDR, CLIENT_DOWNLOAD_DIR
 
 
 class ListenerThread(threading.Thread):
@@ -39,7 +39,9 @@ class ListenerThread(threading.Thread):
 
     def recv_file(self, file_sock, fname):
         print("Receiving File...")
-        f = open(fname, 'wb')
+        fname = fname.split("/")
+        fname = fname[len(fname)-1]
+        f = open(CLIENT_DOWNLOAD_DIR+"/"+fname, 'wb')
         write_line = file_sock.recv(1024)
         while write_line:
             f.write(write_line)
@@ -138,6 +140,8 @@ class FileClient:
         listener.exit()
 
 def main():
+    if not os.path.exists(CLIENT_DOWNLOAD_DIR):
+        os.makedirs(CLIENT_DOWNLOAD_DIR)
     host = SERVER_ADDR
     local_addr = input("Enter your ip address:")
     client = FileClient(host, local_addr)

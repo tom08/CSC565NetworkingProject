@@ -50,7 +50,7 @@ class HandleRequest(threading.Thread):
 
     def forward_request(self, request):
         self.to_socket.connect((self.to_host, self.to_port))
-        self.to_socket.send(to_send.encode());
+        self.to_socket.send(request.encode());
         rcv_ack = self.to_socket.recv(1024).decode()
         print("CONTACTED CLIENT:"+rcv_ack)
 

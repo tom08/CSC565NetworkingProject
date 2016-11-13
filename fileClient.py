@@ -95,6 +95,14 @@ class FileClient:
         self.port = 12001
         self.socket = None
 
+    def send_file_to_server(self, fname):
+        with open(fname, "rb") as f:
+            line = f.read(1024)
+            while line:
+                self.socket.send(line)
+                line = f.read(1024)
+
+
     def start(self):
         listener = ListenerThread(self.local_addr)
         listener.start()
@@ -117,9 +125,15 @@ class FileClient:
                 print("The file '"+args[1]+"' does not exist!")
                 continue
             msg = "TO::"+args[2]+"::FILE::"+args[1]
+            fname = args[1]
             self.socket.send(msg.encode())
             rcvd = self.socket.recv(1024).decode()
-            print("> "+str(rcvd))
+            args = rcvd.split("::")
+            if(len(args) and args[0] == "NORESPONSE"):
+                print("No response from "+args[2]+": uploading file to server")
+                self.send_file_to_server(fname)
+                print("File uploaded to server.")
+            self.socket.shutdown(socket.SHUT_WR)
             self.socket.close()
         listener.exit()
 

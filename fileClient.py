@@ -54,7 +54,6 @@ class ListenerThread(threading.Thread):
         data = client_sock.recv(1024).decode()
         if not data:
             return
-        print(str(data))
         args = data.split("::")
 #REQUEST format == REQUEST::HOST::<host>::FILE::<filename>
         if(len(args) >= 5 and args[0] == "REQUEST"):
@@ -70,7 +69,6 @@ class ListenerThread(threading.Thread):
             file_request = "OKFILE::FILE::"+args[4]
             file_sock.send(file_request.encode())
             ack = file_sock.recv(1024).decode()
-            print(ack)
             self.recv_file(file_sock, args[4])
         elif(len(args) >= 3 and args[0] == "OKFILE"):
             ack = "SENDING::FILE::"+args[2]
@@ -104,11 +102,39 @@ class FileClient:
                 self.socket.send(line)
                 line = f.read(1024)
 
+    def get_file_from_server(self, fname):
+        path = CLIENT_DOWNLOAD_DIR+"/"+fname
+        print("Recieving "+fname+" from server...")
+        with open(path, "wb") as f:
+            line = self.socket.recv(1024)
+            while line:
+                f.write(line)
+                line = self.socket.recv(1024)
+        print("File Recieved")
 
     def start(self):
         listener = ListenerThread(self.local_addr)
         listener.start()
         print("Client main program started!")
+        print("Checking for queued files...")
+        queued_files = True
+
+        while queued_files:
+            self.socket = socket.socket()
+            self.socket.connect((self.host, self.port))
+            msg = self.socket.recv(1024).decode()
+            msg = msg.split("::")
+            if msg[0] == "NOFILES":
+                queued_files = False
+                print("No queued files on the server.")
+            elif len(msg) and msg[0] == "SEND":
+                approval = input(msg[4]+" would like to send the file: "+msg[2]+". Do you accept? [y/N]")
+                if approval not in ('y', 'Y', 'yes', 'Yes', 'YES'):
+                    self.socket.send("DENY::".encode())
+                    continue
+                self.socket.send("APPROVE::".encode())
+                self.get_file_from_server(msg[2])
+
         print("Type 'exit' to quit else 'send filename hostname':")
         while True:
             self.socket = socket.socket()
@@ -119,6 +145,7 @@ class FileClient:
                 msg, o, e = select.select([sys.stdin], [], [], timeout)
             args = sys.stdin.readline().strip().split()
             if args[0] == "exit":
+                self.socket.close()
                 break
             if args[0] != 'send' or not len(args) >= 3:
                 print("That was not a valid command!")

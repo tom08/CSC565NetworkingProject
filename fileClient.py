@@ -101,6 +101,7 @@ class FileClient:
             while line:
                 self.socket.send(line)
                 line = f.read(1024)
+            self.socket.shutdown(socket.SHUT_WR)
 
     def get_file_from_server(self, fname):
         path = CLIENT_DOWNLOAD_DIR+"/"+fname
@@ -139,6 +140,7 @@ class FileClient:
         while True:
             self.socket = socket.socket()
             self.socket.connect((self.host, self.port))
+            rcv = self.socket.recv(1024).decode()
             msg = None
             timeout = 2
             while(not msg):

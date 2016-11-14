@@ -26,7 +26,12 @@ class HandleRequest(threading.Thread):
         return fname[len(fname)-1]
 
     def log_job(self):
+        # TODO: Check that no file with this filename exists in the correct dir,
+        # if it does, do not add another entry, just overwrite the file.
         fname = self.get_fname()
+        check_if_exists = SERVER_TEMP_FILES+"/"+self.to_host+"/"+fname
+        if os.path.isfile(check_if_exists):
+            return
         log = "TOSEND::SENTBY::"+self.init_host+"::TO::"+self.to_host+"::FILENAME::"+fname+"\n"
         with open(SERVER_TEMP_INFO+"/"+SERVER_TEMP_INFO_FILE, "a+") as f:
             f.write(log)

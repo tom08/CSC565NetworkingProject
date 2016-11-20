@@ -132,6 +132,9 @@ class FileClient:
             self.socket.send(username.encode())
 
         while queued_files:
+            if msg[0] == "NORECORD":
+                msg = self.socket.recv(1024).decode()
+                msg = msg.split("::")
             if msg[0] == "NOFILES":
                 queued_files = False
                 print("No queued files on the server.")

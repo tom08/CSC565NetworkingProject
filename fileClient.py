@@ -150,7 +150,7 @@ class FileClient:
             msg = self.socket.recv(1024).decode()
             msg = msg.split("::")
 
-        print("Type 'exit' to quit else 'send filename hostname':")
+        print("Type 'exit' to quit else 'send filename computer_username':")
         while True:
             self.socket = socket.socket()
             self.socket.connect((self.host, self.port))
@@ -178,6 +178,8 @@ class FileClient:
                 print("No response from "+args[2]+": uploading file to server")
                 self.send_file_to_server(fname)
                 print("File uploaded to server.")
+            if len(args) > 1 and args[0] == "ERROR":
+                print("Error: "+args[1])
             self.socket.shutdown(socket.SHUT_WR)
             self.socket.close()
         listener.exit()

@@ -116,8 +116,8 @@ class HandleRequest(threading.Thread):
             while line:
                 entry = line.split("::")
                 if not username and entry[0] == self.init_host:
-                    return entry[1]
-                if username and entry[1] == username:
+                    return entry[1].strip()
+                if username and entry[1].strip() == username:
                     return entry[0]
                 line = f.readline()
         return None
@@ -144,7 +144,14 @@ class HandleRequest(threading.Thread):
             data = self.init_socket.recv(1024).decode()
             args = data.split('::')
             if len(args) >=2 and args[0] == "TO":
-                self.to_host = args[1]
+                host = self.check_client(args[1])
+                if host:
+                    self.to_host = host
+                else:
+                    error = "ERROR::Client '"+args[1]+"' not found!"
+                    self.init_socket.send(error.encode())
+                    self.init_socket.close()
+                    return
             if len(args) >= 4 and args[2] == "FILE":
                 self.filename = args[3]
             if self.to_host and self.filename:

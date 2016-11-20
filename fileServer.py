@@ -5,7 +5,7 @@ Initial contact: TO::hostname::FILE::filename
 import os
 import socket
 import threading
-from settings import SERVER_ADDR, SERVER_TEMP_INFO, SERVER_TEMP_INFO_FILE, SERVER_TEMP_FILES
+from settings import SERVER_ADDR, SERVER_TEMP_INFO, SERVER_TEMP_INFO_FILE, SERVER_TEMP_FILES, SERVER_CLIENT_INFO_DIR, SERVER_CLIENT_INFO
 
 
 class HandleRequest(threading.Thread):
@@ -99,8 +99,41 @@ class HandleRequest(threading.Thread):
         # No matter the outcome, we don't keep the file on the server.
         os.remove(fname)
 
+    def write_client(self, username):
+        fname = SERVER_CLIENT_INFO_DIR+"/"+SERVER_CLIENT_INFO
+        if not os.path.exists(SERVER_CLIENT_INFO_DIR):
+            os.makedirs(SERVER_CLIENT_INFO_DIR)
+        with open(fname, "a+") as f:
+            line = self.init_host+"::"+username+"\n"
+            f.write(line)
+
+    def check_client(self, username=None):
+        fname = SERVER_CLIENT_INFO_DIR+"/"+SERVER_CLIENT_INFO
+        if not os.path.isfile(fname):
+            return None
+        with open(fname, "r") as f:
+            line = f.readline()
+            while line:
+                entry = line.split("::")
+                if not username and entry[0] == self.init_host:
+                    return entry[1]
+                if username and entry[1] == username:
+                    return entry[0]
+                line = f.readline()
+        return None
+
+    def initial_contact(self):
+        username = self.check_client()
+        if not username:
+            not_registered = "NORECORD::"
+            self.init_socket.send(not_registered.encode())
+            response = self.init_socket.recv(1024).decode().split("::")
+            if len(response) and response[0] == "UNAME":
+                self.write_client(response[1])
+
     def run(self):
         try:
+            self.initial_contact()
             file_to_send = self.check_queued_files()
             if(file_to_send):
                 self.send_file(file_to_send)

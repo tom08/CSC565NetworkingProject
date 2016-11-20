@@ -119,12 +119,19 @@ class FileClient:
         print("Client main program started!")
         print("Checking for queued files...")
         queued_files = True
+        self.socket = socket.socket()
+        self.socket.connect((self.host, self.port))
+
+        msg = self.socket.recv(1024).decode()
+        msg = msg.split("::")
+        if len(msg) and msg[0] == "NORECORD":
+            username = input("The server has no record of you, please enter a username: ")
+            while not username:
+                username = input("Please enter a username!")
+            username = "UNAME::"+username
+            self.socket.send(username.encode())
 
         while queued_files:
-            self.socket = socket.socket()
-            self.socket.connect((self.host, self.port))
-            msg = self.socket.recv(1024).decode()
-            msg = msg.split("::")
             if msg[0] == "NOFILES":
                 queued_files = False
                 print("No queued files on the server.")
@@ -135,6 +142,10 @@ class FileClient:
                     continue
                 self.socket.send("APPROVE::".encode())
                 self.get_file_from_server(msg[2])
+            self.socket = socket.socket()
+            self.socket.connect((self.host, self.port))
+            msg = self.socket.recv(1024).decode()
+            msg = msg.split("::")
 
         print("Type 'exit' to quit else 'send filename hostname':")
         while True:

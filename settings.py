@@ -10,6 +10,12 @@ SERVER_TEMP_INFO_FILE = "temp_info.txt"
 # Folder to hold temp files on server
 SERVER_TEMP_FILES = "./temp_files"
 
+# Directory to store client information on server
+SERVER_CLIENT_INFO_DIR = "./clients"
+
+# File where client info is stored on the server
+SERVER_CLIENT_INFO = "clients.txt"
+
 # Directory on client where downloaded files will be placed
 CLIENT_DOWNLOAD_DIR = "./downloads"
 

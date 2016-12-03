@@ -1,5 +1,21 @@
+"""
+Author:         Thomas Kroll
+File:           settings.py
+Description:
+    This file holds the default settings for the project.
+    To override any of the settings, create a file called:
+    "settings_local.py" in the same directory and re-define
+    any of the settings that you want.
+    SERVER_ADDR MUST be re-defined for the program to work in
+    the way it was anticipated to.
+"""
+
 # Address of control server
-SERVER_ADDR = "192.168.1.8"
+# This will need to be overridden for production.
+SERVER_ADDR = "localhost"
+
+# Time the server will wait for a destination client to respond.
+TIMEOUT = 5
 
 # Directory where information on temp files is stored
 SERVER_TEMP_INFO = "./server_file_info"

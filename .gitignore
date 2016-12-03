@@ -2,4 +2,5 @@ settings_local.py
 *.pyc
 *.txt
 server_file_info
+downloads
 __pycache__
